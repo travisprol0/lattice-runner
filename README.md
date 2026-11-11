@@ -62,7 +62,17 @@ Each has a **unique stable** `RUNNER_NAME` and its own data volume (required: ru
 | `CONFIGURED_ACTIONS_RUNNER_FILES_DIR` | `/tmp/runner` | Persist registration ([README](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md); wiki Reusage) |
 | `DISABLE_AUTOMATIC_DEREGISTRATION` | `true` | Required with reusage or entrypoint exits |
 | `DISABLE_AUTO_UPDATE` | `true` | Container path; any value is truthy |
-| Image | `…:latest` (or pin via `GITHUB_RUNNER_IMAGE_TAG`) | Floating tag + `bash up.sh --upgrade` |
+| Image | `…:ubuntu-noble` (default; override via `GITHUB_RUNNER_IMAGE_TAG`) | 24.04 matches [setup-python self-hosted Ubuntu](https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#using-setup-python-with-a-self-hosted-runner); myoung34 rebuilds this tag nightly. **Do not use bare `latest` (resolute)** — pip fails with missing SSL. |
+
+## setup-python / pip SSL
+
+Jobs that use `actions/setup-python` then `pip install` run **inside** these runner containers. setup-python’s docs: Python builds exist only for the same Ubuntu versions as GitHub-hosted runners. myoung34’s `:latest` is **ubuntu resolute**, which is not that set — you get:
+
+`ssl module in Python is not available` / pip cannot fetch PyPI over HTTPS.
+
+**lattice-runner fix:** default image `ubuntu-noble`. After switching, wipe toolcache volumes (they may hold a broken Python from resolute) and upgrade runners (see commands below).
+
+**Workflow side (lattice-log):** `runs-on: [self-hosted, talos]` is fine. A workflow-only workaround is `container: ubuntu:24.04`, but that is a different execution model; prefer fixing the runner OS here.
 
 ## Recovery: session Conflict right now
 
@@ -78,3 +88,18 @@ docker compose logs -f --tail=80
 ```
 
 Expect `Listening for Jobs` without Conflict. Do **not** `--force-recreate` in a loop — that resets GitHub’s session cleanup timer.
+
+## Switch to ubuntu-noble (pip SSL fix)
+
+If `.env` sets `GITHUB_RUNNER_IMAGE_TAG=latest`, remove it or set `ubuntu-noble`. Then:
+
+```bash
+docker compose stop
+docker volume ls | grep toolcache
+# remove the four runner-*-toolcache volumes for this project (prefix is usually <dir>_)
+docker volume rm <prefix>_runner-1-toolcache <prefix>_runner-2-toolcache \
+  <prefix>_runner-3-toolcache <prefix>_runner-4-toolcache
+SESSION_WAIT=90 bash up.sh --upgrade
+docker compose exec runner-1 bash -lc 'grep VERSION= /etc/os-release'
+# expect Ubuntu 24.04 / noble — then re-run the lattice-log workflow
+```

@@ -11,15 +11,16 @@ Do not invent or flip runner env / recreate flags from logs alone.
 1. Read this repo’s `README.md`, `up.sh`, and compose comments.
 2. Confirm keys against [myoung34 README env table](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md) and [Usage wiki](https://github.com/myoung34/docker-github-actions-runner/wiki/Usage).
 3. Never default to `docker compose up --force-recreate` with reusage — same `RUNNER_NAME` + live session → Conflict.
+4. Never default the image to bare `latest` if workflows use `actions/setup-python` — `latest` is resolute; setup-python only supports GitHub-hosted Ubuntu (jammy/noble). Use `ubuntu-noble`.
 
 ```text
 # ❌
 docker compose up -d --force-recreate
 DISABLE_AUTO_UPDATE: "false"    # still truthy
-image pin 2.338.2 as forever default
+image: ...:latest                 # resolute → pip SSL break with setup-python
 
 # ✅
 bash up.sh                 # up -d --no-recreate
 bash up.sh --upgrade       # pull; stop; wait; up -d if digest changed
-latest + DISABLE_AUTO_UPDATE=true + CONFIGURED_* + DISABLE_AUTOMATIC_DEREGISTRATION=true
+ubuntu-noble + DISABLE_AUTO_UPDATE=true + CONFIGURED_* + DISABLE_AUTOMATIC_DEREGISTRATION=true
 ```

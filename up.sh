@@ -18,7 +18,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-TAG="${GITHUB_RUNNER_IMAGE_TAG:-latest}"
+TAG="${GITHUB_RUNNER_IMAGE_TAG:-ubuntu-noble}"
 IMAGE="myoung34/github-runner:${TAG}"
 # GitHub holds stale sessions after an ungraceful kill; 90s is a practical floor.
 SESSION_WAIT="${SESSION_WAIT:-90}"

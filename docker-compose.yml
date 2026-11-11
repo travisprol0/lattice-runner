@@ -1,8 +1,10 @@
 x-runner-base: &runner-base
-  # Floating tag: myoung34 rebuilds `latest` nightly / on master merges.
-  # Override with GITHUB_RUNNER_IMAGE_TAG only to freeze (e.g. 2.338.2 or ubuntu-noble).
+  # Default ubuntu-noble (24.04), NOT :latest (resolute). setup-python only ships
+  # builds for GitHub-hosted Ubuntu images (22.04/24.04); resolute breaks pip SSL
+  # ("ssl module in Python is not available"). myoung34: pin ubuntu-noble for 24.04.
+  # Override with GITHUB_RUNNER_IMAGE_TAG (e.g. ubuntu-jammy, 2.338.2-ubuntu-noble).
   # pull_policy is NOT always: always-pull+recreate races GitHub sessions (see up.sh).
-  image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
+  image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-ubuntu-noble}"
   pull_policy: missing
   network_mode: host
   restart: unless-stopped
