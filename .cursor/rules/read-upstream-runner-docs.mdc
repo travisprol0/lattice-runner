@@ -1,26 +1,25 @@
 ---
-description: Before changing myoung34 github-runner compose env or image tags
-globs: docker-compose.yml,up.sh,README.md
+description: Before changing myoung34 github-runner compose env, up.sh, or image tags
+globs: docker-compose.yml,up.sh,README.md,.env.example
 alwaysApply: false
 ---
 
 # Read upstream before changing runner env
 
-Do not invent or flip `DISABLE_*`, `CONFIGURED_*`, or image tags from logs alone.
+Do not invent or flip runner env / recreate flags from logs alone.
 
-1. Read this repo’s `README.md` and `docker-compose.yml` comments.
-2. Confirm every key against [myoung34/docker-github-actions-runner README](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md) and [Usage wiki](https://github.com/myoung34/docker-github-actions-runner/wiki/Usage).
-3. For updates, prefer floating `latest` + pull/recreate; do not hardcode a version as the long-term default.
+1. Read this repo’s `README.md`, `up.sh`, and compose comments.
+2. Confirm keys against [myoung34 README env table](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md) and [Usage wiki](https://github.com/myoung34/docker-github-actions-runner/wiki/Usage).
+3. Never default to `docker compose up --force-recreate` with reusage — same `RUNNER_NAME` + live session → Conflict.
 
 ```text
-# ❌ Guess from a crash loop
-DISABLE_AUTO_UPDATE: "false"   # still truthy on this image
-image: "...:2.338.2"             # will deprecate; not a forever default
+# ❌
+docker compose up -d --force-recreate
+DISABLE_AUTO_UPDATE: "false"    # still truthy
+image pin 2.338.2 as forever default
 
-# ✅ Docs-backed
-# DISABLE_AUTO_UPDATE any value => --disableupdate (container path)
-# latest rebuilt by myoung34; refresh with docker compose pull + recreate
-image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
-pull_policy: always
-DISABLE_AUTO_UPDATE: "true"
+# ✅
+bash up.sh                 # up -d --no-recreate
+bash up.sh --upgrade       # pull; stop; wait; up -d if digest changed
+latest + DISABLE_AUTO_UPDATE=true + CONFIGURED_* + DISABLE_AUTOMATIC_DEREGISTRATION=true
 ```

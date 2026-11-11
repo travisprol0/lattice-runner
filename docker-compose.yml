@@ -1,22 +1,25 @@
 x-runner-base: &runner-base
-  # Floating tag: myoung34 rebuilds `latest` nightly / on master merges (and on upstream runner tags).
+  # Floating tag: myoung34 rebuilds `latest` nightly / on master merges.
   # Override with GITHUB_RUNNER_IMAGE_TAG only to freeze (e.g. 2.338.2 or ubuntu-noble).
+  # pull_policy is NOT always: always-pull+recreate races GitHub sessions (see up.sh).
   image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
-  pull_policy: always
+  pull_policy: missing
   network_mode: host
-  # Keep containers up across process exits until you `docker compose stop`.
   restart: unless-stopped
+  # Give Runner.Listener time to drop its broker session on docker stop.
+  stop_grace_period: 30s
 
 x-runner-env: &runner-env
-  # GitHub: --disableupdate for containers; update by pulling a newer image (within ~30 days of a release).
-  # myoung34: any value is truthy. In-container auto-update exits PID 1 and does not persist (#251).
+  # GitHub: --disableupdate for containers; refresh via `bash up.sh --upgrade` within ~30 days.
+  # myoung34: any value is truthy. In-container auto-update does not persist (#251).
   DISABLE_AUTO_UPDATE: "true"
-  # Required with CONFIGURED_ACTIONS_RUNNER_FILES_DIR; otherwise reuse exits and restart-loops.
+  # Required with CONFIGURED_ACTIONS_RUNNER_FILES_DIR (entrypoint exits otherwise).
   DISABLE_AUTOMATIC_DEREGISTRATION: "true"
   REPO_URL: "https://github.com/travisprol0/lattice-log"
   ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+  # Per-service volumes isolate /tmp/runner; do not share one workdir across runners (README).
   RUNNER_WORKDIR: "/tmp/runner/work"
-  # Persist registration (.runner / credentials), not the runner binary — binary comes from the image.
+  # Persist registration only; binary comes from the image.
   CONFIGURED_ACTIONS_RUNNER_FILES_DIR: "/tmp/runner"
 
 services:
