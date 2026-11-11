@@ -2,7 +2,7 @@
 
 Self-hosted GitHub Actions runners for [travisprol0/lattice-log](https://github.com/travisprol0/lattice-log), via Compose + [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner).
 
-Four runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`).
+Four runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`). lattice-log CI is pinned to those labels only. CI uses **host** Postgres at `127.0.0.1:5432` on talos (not a job-local `-p 5432:5432` container). Production app stays on Render (https://latticelog.com) with its own DB. stagehand on talos monitors these runners with `GITHUB_REPO=travisprol0/lattice-log`.
 
 ## Setup
 
@@ -41,8 +41,30 @@ docker compose stop
 
 ```bash
 docker compose down          # keep volumes (registration + caches)
-docker compose down -v       # wipe registration/caches — rare
+docker compose down -v       # wipe registration/caches — NEVER routine
 ```
+
+**Do not** `compose down -v` or wipe `runner-*-data` to “fix” a bad session.
+`DISABLE_AUTOMATIC_DEREGISTRATION=true` + a wiped volume re-registers a **new**
+GitHub runner id under the same `RUNNER_NAME`, leaving offline duplicates.
+Keep the named data volumes; use `bash up.sh` / `bash up.sh --upgrade` instead.
+
+## Prune offline duplicate registrations (on talos)
+
+If GitHub shows multiple offline `talos-1`…`talos-4` entries:
+
+```bash
+cd ~/lattice-runner
+set -a && source .env && set +a
+python3 scripts/prune_offline_runners.py          # dry-run
+python3 scripts/prune_offline_runners.py --apply  # DELETE safe offline dupes
+bash up.sh
+```
+
+Uses `GITHUB_RUNNER_TOKEN` as a **PAT** (not a one-hour registration token) via
+stdlib Python (`gh` optional). Safe rules: delete offline dupes when an online
+peer exists; if all offline for a name, keep the newest id. Does not touch
+non-`talos-[1-4]` runners.
 
 ## Runners
 

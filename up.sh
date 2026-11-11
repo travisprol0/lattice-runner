@@ -5,6 +5,10 @@
 # GitHub session while CONFIGURED_ACTIONS_RUNNER_FILES_DIR reuses the same runner
 # identity → "A session for this runner already exists").
 #
+# Never `docker compose down -v` as a routine fix — wiping runner-*-data leaves
+# offline duplicate talos-* registrations on GitHub. Prune with
+# scripts/prune_offline_runners.py instead.
+#
 # Image refresh: bash up.sh --upgrade
 #   pull → stop → wait for GitHub session release → up -d
 #   (actions/runner#3624: instant restart with the same name can reset cleanup)
