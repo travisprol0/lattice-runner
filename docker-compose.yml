@@ -1,0 +1,96 @@
+x-runner-base: &runner-base
+  image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
+  network_mode: host
+  restart: unless-stopped
+
+services:
+
+  runner-1:
+    <<: *runner-base
+    environment:
+      DISABLE_AUTO_UPDATE: "true"
+      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      RUNNER_NAME: "talos-1"
+      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+      RUNNER_WORKDIR: "/tmp/runner/work"
+      LABELS: "talos,talos-1"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "runner-1-data:/tmp/runner"
+      - "runner-1-toolcache:/opt/hostedtoolcache"
+      - "runner-1-pip-cache:/root/.cache/pip"
+      - "runner-1-npm-cache:/root/.npm"
+      - "runner-1-cypress-cache:/root/.cache/Cypress"
+
+  runner-2:
+    <<: *runner-base
+    environment:
+      DISABLE_AUTO_UPDATE: "true"
+      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      RUNNER_NAME: "talos-2"
+      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+      RUNNER_WORKDIR: "/tmp/runner/work"
+      LABELS: "talos,talos-2"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "runner-2-data:/tmp/runner"
+      - "runner-2-toolcache:/opt/hostedtoolcache"
+      - "runner-2-pip-cache:/root/.cache/pip"
+      - "runner-2-npm-cache:/root/.npm"
+      - "runner-2-cypress-cache:/root/.cache/Cypress"
+
+  runner-3:
+    <<: *runner-base
+    environment:
+      DISABLE_AUTO_UPDATE: "true"
+      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      RUNNER_NAME: "talos-3"
+      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+      RUNNER_WORKDIR: "/tmp/runner/work"
+      LABELS: "talos,talos-3"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "runner-3-data:/tmp/runner"
+      - "runner-3-toolcache:/opt/hostedtoolcache"
+      - "runner-3-pip-cache:/root/.cache/pip"
+      - "runner-3-npm-cache:/root/.npm"
+      - "runner-3-cypress-cache:/root/.cache/Cypress"
+
+  runner-4:
+    <<: *runner-base
+    environment:
+      DISABLE_AUTO_UPDATE: "true"
+      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      RUNNER_NAME: "talos-4"
+      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+      RUNNER_WORKDIR: "/tmp/runner/work"
+      LABELS: "talos,talos-4"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "runner-4-data:/tmp/runner"
+      - "runner-4-toolcache:/opt/hostedtoolcache"
+      - "runner-4-pip-cache:/root/.cache/pip"
+      - "runner-4-npm-cache:/root/.npm"
+      - "runner-4-cypress-cache:/root/.cache/Cypress"
+
+volumes:
+  runner-1-data:
+  runner-1-toolcache:
+  runner-1-pip-cache:
+  runner-1-npm-cache:
+  runner-1-cypress-cache:
+  runner-2-data:
+  runner-2-toolcache:
+  runner-2-pip-cache:
+  runner-2-npm-cache:
+  runner-2-cypress-cache:
+  runner-3-data:
+  runner-3-toolcache:
+  runner-3-pip-cache:
+  runner-3-npm-cache:
+  runner-3-cypress-cache:
+  runner-4-data:
+  runner-4-toolcache:
+  runner-4-pip-cache:
+  runner-4-npm-cache:
+  runner-4-cypress-cache:
