@@ -89,17 +89,42 @@ docker compose logs -f --tail=80
 
 Expect `Listening for Jobs` without Conflict. Do **not** `--force-recreate` in a loop — that resets GitHub’s session cleanup timer.
 
-## Switch to ubuntu-noble (pip SSL fix)
+## Switch to ubuntu-noble (pip SSL fix) — must run on talos
 
-If `.env` sets `GITHUB_RUNNER_IMAGE_TAG=latest`, remove it or set `ubuntu-noble`. Then:
+Editing this repo on a laptop does nothing until the files are on talos **and** you wipe toolcache + upgrade. Compose mounts named volumes at `/opt/hostedtoolcache` (setup-python’s cache). A job that still says `Packages already satisfied` under `/opt/hostedtoolcache/Python/3.12.10/x64` is using that stale volume.
+
+If `.env` sets `GITHUB_RUNNER_IMAGE_TAG=latest`, change it to `ubuntu-noble` or delete the line.
+
+From the `lattice-runner` project directory on **talos** (Compose project name = directory name → volume prefix `lattice-runner_`):
 
 ```bash
+# 0) Confirm this checkout defaults to noble
+grep 'ubuntu-noble' docker-compose.yml up.sh
+
+# 1) Stop runners
 docker compose stop
-docker volume ls | grep toolcache
-# remove the four runner-*-toolcache volumes for this project (prefix is usually <dir>_)
-docker volume rm <prefix>_runner-1-toolcache <prefix>_runner-2-toolcache \
-  <prefix>_runner-3-toolcache <prefix>_runner-4-toolcache
+
+# 2) Wipe setup-python toolcaches (exact names when project dir is lattice-runner)
+docker volume rm \
+  lattice-runner_runner-1-toolcache \
+  lattice-runner_runner-2-toolcache \
+  lattice-runner_runner-3-toolcache \
+  lattice-runner_runner-4-toolcache
+
+# If rm says no such volume, list and use the real prefix:
+# docker volume ls | grep toolcache
+
+# 3) Pull noble + graceful restart
 SESSION_WAIT=90 bash up.sh --upgrade
-docker compose exec runner-1 bash -lc 'grep VERSION= /etc/os-release'
-# expect Ubuntu 24.04 / noble — then re-run the lattice-log workflow
+
+# 4) MUST pass before re-running CI
+docker compose ps
+docker compose exec runner-1 bash -lc 'echo IMAGE=$(cat /etc/os-release | grep PRETTY); grep VERSION_ID= /etc/os-release; ls /opt/hostedtoolcache 2>/dev/null || echo toolcache-empty-ok'
+docker inspect --format '{{.Config.Image}} {{.Image}}' "$(docker compose ps -q runner-1)"
+# Expect: Image myoung34/github-runner:ubuntu-noble, VERSION_ID="24.04", toolcache empty or no Python/
+
+# 5) Only then re-run the lattice-log workflow.
+# setup-python should DOWNLOAD Python again (not "already satisfied").
+# Optional check after that job (or after manually invoking setup-python):
+# docker compose exec runner-1 bash -lc '/opt/hostedtoolcache/Python/3.12.*/x64/bin/python -c "import ssl; print(ssl.OPENSSL_VERSION)"'
 ```
