@@ -59,6 +59,6 @@ Each runner mounts the host Docker socket, so jobs can build/run containers. Reg
 
 ## Notes
 
-- `DISABLE_AUTO_UPDATE=true` — containers do not update the runner binary on their own.
+- Leave `DISABLE_AUTO_UPDATE` unset — any value is truthy on this image and can pin a deprecated runner that GitHub rejects.
 - `CONFIGURED_ACTIONS_RUNNER_FILES_DIR` points at the data volume so config survives restarts (avoids re-register crash loops).
 - `network_mode: host` — runners use the host network stack.

@@ -5,7 +5,8 @@ x-runner-base: &runner-base
   restart: unless-stopped
 
 x-runner-env: &runner-env
-  DISABLE_AUTO_UPDATE: "true"
+  # Do not set DISABLE_AUTO_UPDATE: any value (even "false") is truthy and pins a
+  # deprecated Runner.Listener that GitHub rejects ("cannot receive messages").
   # Required with CONFIGURED_ACTIONS_RUNNER_FILES_DIR; otherwise reuse exits and restart-loops.
   DISABLE_AUTOMATIC_DEREGISTRATION: "true"
   REPO_URL: "https://github.com/travisprol0/lattice-log"
