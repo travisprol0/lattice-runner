@@ -6,6 +6,8 @@ x-runner-base: &runner-base
 
 x-runner-env: &runner-env
   DISABLE_AUTO_UPDATE: "true"
+  # Required with CONFIGURED_ACTIONS_RUNNER_FILES_DIR; otherwise reuse exits and restart-loops.
+  DISABLE_AUTOMATIC_DEREGISTRATION: "true"
   REPO_URL: "https://github.com/travisprol0/lattice-log"
   ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
   RUNNER_WORKDIR: "/tmp/runner/work"
