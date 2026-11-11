@@ -1,18 +1,24 @@
 x-runner-base: &runner-base
   image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
   network_mode: host
+  # Keep containers up across process exits until you `docker compose stop` / Ctrl-C the up loop.
   restart: unless-stopped
+
+x-runner-env: &runner-env
+  DISABLE_AUTO_UPDATE: "true"
+  REPO_URL: "https://github.com/travisprol0/lattice-log"
+  ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+  RUNNER_WORKDIR: "/tmp/runner/work"
+  # Persist registration so restarts do not re-register and crash-loop.
+  CONFIGURED_ACTIONS_RUNNER_FILES_DIR: "/tmp/runner"
 
 services:
 
   runner-1:
     <<: *runner-base
     environment:
-      DISABLE_AUTO_UPDATE: "true"
-      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      <<: *runner-env
       RUNNER_NAME: "talos-1"
-      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
-      RUNNER_WORKDIR: "/tmp/runner/work"
       LABELS: "talos,talos-1"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -25,11 +31,8 @@ services:
   runner-2:
     <<: *runner-base
     environment:
-      DISABLE_AUTO_UPDATE: "true"
-      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      <<: *runner-env
       RUNNER_NAME: "talos-2"
-      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
-      RUNNER_WORKDIR: "/tmp/runner/work"
       LABELS: "talos,talos-2"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -42,11 +45,8 @@ services:
   runner-3:
     <<: *runner-base
     environment:
-      DISABLE_AUTO_UPDATE: "true"
-      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      <<: *runner-env
       RUNNER_NAME: "talos-3"
-      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
-      RUNNER_WORKDIR: "/tmp/runner/work"
       LABELS: "talos,talos-3"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -59,11 +59,8 @@ services:
   runner-4:
     <<: *runner-base
     environment:
-      DISABLE_AUTO_UPDATE: "true"
-      REPO_URL: "https://github.com/travisprol0/lattice-log"
+      <<: *runner-env
       RUNNER_NAME: "talos-4"
-      ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
-      RUNNER_WORKDIR: "/tmp/runner/work"
       LABELS: "talos,talos-4"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
