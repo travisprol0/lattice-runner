@@ -1,7 +1,7 @@
 x-runner-base: &runner-base
   image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-latest}"
   network_mode: host
-  # Keep containers up across process exits until you `docker compose stop` / Ctrl-C the up loop.
+  # Keep containers up across process exits until you `docker compose stop`.
   restart: unless-stopped
 
 x-runner-env: &runner-env
