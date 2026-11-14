@@ -82,7 +82,28 @@ services:
       - "runner-4-npm-cache:/root/.npm"
       - "runner-4-cypress-cache:/root/.cache/Cypress"
 
+  # Light-jobs runner. No `talos` label on purpose: lattice-log heavy jobs
+  # (pytest, Cypress) use `runs-on: [self-hosted, talos]` and can never land here,
+  # so lint / build / ci-success jobs (`runs-on: self-hosted`) always have a free
+  # slot even when talos-1..4 are busy with another branch.
+  runner-light:
+    <<: *runner-base
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: "talos-light"
+      LABELS: "talos-light"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "runner-light-data:/tmp/runner"
+      - "runner-light-toolcache:/opt/hostedtoolcache"
+      - "runner-light-pip-cache:/root/.cache/pip"
+      - "runner-light-npm-cache:/root/.npm"
+
 volumes:
+  runner-light-data:
+  runner-light-toolcache:
+  runner-light-pip-cache:
+  runner-light-npm-cache:
   runner-1-data:
   runner-1-toolcache:
   runner-1-pip-cache:
