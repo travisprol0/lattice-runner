@@ -2,7 +2,7 @@
 
 Self-hosted GitHub Actions runners for [travisprol0/lattice-log](https://github.com/travisprol0/lattice-log), via Compose + [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner).
 
-Four runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`). lattice-log CI is pinned to those labels only. CI uses **host** Postgres at `127.0.0.1:5432` on talos (not a job-local `-p 5432:5432` container). Production app stays on Render (https://latticelog.com) with its own DB. stagehand on talos monitors these runners with `GITHUB_REPO=travisprol0/lattice-log`.
+Four heavy runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`); lattice-log runs pytest and Cypress only on those, so at most four heavy jobs run at once on the 4-core / 8-thread host. A fifth runner, `talos-light`, has **no** `talos` label: it only takes light jobs (`runs-on: self-hosted` — lint, asset/docs builds, `ci-success`), so those never queue behind heavy jobs from another branch. CI uses **host** Postgres at `127.0.0.1:5432` on talos (not a job-local `-p 5432:5432` container). Production app stays on Render (https://latticelog.com) with its own DB. stagehand on talos monitors these runners with `GITHUB_REPO=travisprol0/lattice-log`.
 
 ## Setup
 
@@ -64,7 +64,7 @@ bash up.sh
 Uses `GITHUB_RUNNER_TOKEN` as a **PAT** (not a one-hour registration token) via
 stdlib Python (`gh` optional). Safe rules: delete offline dupes when an online
 peer exists; if all offline for a name, keep the newest id. Does not touch
-non-`talos-[1-4]` runners.
+runners other than `talos-1`…`talos-4` and `talos-light`.
 
 ## Runners
 
@@ -74,6 +74,7 @@ non-`talos-[1-4]` runners.
 | runner-2 | talos-2     | talos, talos-2   | runner-2-data  |
 | runner-3 | talos-3     | talos, talos-3   | runner-3-data  |
 | runner-4 | talos-4     | talos, talos-4   | runner-4-data  |
+| runner-light | talos-light | talos-light  | runner-light-data |
 
 Each has a **unique stable** `RUNNER_NAME` and its own data volume (required: runners on one host must not share `RUNNER_WORKDIR` — [myoung34 README](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md)).
 

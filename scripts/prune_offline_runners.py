@@ -10,7 +10,7 @@ Actions admin on the repo). A short-lived GitHub UI “registration token” can
 register runners but cannot list/delete them. Uses urllib only — `gh` may be
 missing on talos.
 
-Safe rules (per name talos-1 … talos-4):
+Safe rules (per name talos-1 … talos-4, talos-light):
   - If any registration is online: delete all offline duplicates for that name.
   - If all are offline and more than one exists: keep the newest id, delete older.
   - Never deletes non-talos-* runners.
@@ -32,7 +32,7 @@ import urllib.request
 
 REPO = os.environ.get("GITHUB_RUNNER_REPO", "travisprol0/lattice-log")
 API = os.environ.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
-NAME_RE = re.compile(r"^talos-[1-4]$")
+NAME_RE = re.compile(r"^talos-([1-4]|light)$")
 
 
 def _request(method: str, url: str, token: str) -> dict | list | None:
@@ -123,7 +123,9 @@ def main() -> int:
     print(f"Listing runners for {REPO} …")
     runners = _list_runners(token)
     talos = [r for r in runners if NAME_RE.match(str(r.get("name") or ""))]
-    print(f"Found {len(talos)} talos-1…4 registration(s) (of {len(runners)} total):")
+    print(
+        f"Found {len(talos)} talos-1…4/light registration(s) (of {len(runners)} total):"
+    )
     for r in sorted(talos, key=lambda x: (str(x.get("name")), int(x["id"]))):
         print(
             f"  id={r['id']} name={r.get('name')} "
