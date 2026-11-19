@@ -83,15 +83,18 @@ services:
       - "runner-4-cypress-cache:/root/.cache/Cypress"
 
   # Light-jobs runner. No `talos` label on purpose: lattice-log heavy jobs
-  # (pytest, Cypress) use `runs-on: [self-hosted, talos]` and can never land here,
-  # so lint / build / ci-success jobs (`runs-on: self-hosted`) always have a free
-  # slot even when talos-1..4 are busy with another branch.
+  # (pytest, Cypress, build-assets) use `runs-on: [self-hosted, talos]` and can never
+  # land here. `light` is shared with hermes-1: lattice-log light jobs use
+  # `runs-on: [self-hosted, light]`, and this runner takes them when hermes is offline.
+  # `talos-light` stays so runs created before the switch to `gate` still find a runner.
+  # LABELS only applies at first registration; on an existing registration add labels
+  # with the GitHub API (README, "Labels").
   runner-light:
     <<: *runner-base
     environment:
       <<: *runner-env
       RUNNER_NAME: "talos-light"
-      LABELS: "talos-light"
+      LABELS: "talos-light,light"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "runner-light-data:/tmp/runner"
@@ -99,7 +102,21 @@ services:
       - "runner-light-pip-cache:/root/.cache/pip"
       - "runner-light-npm-cache:/root/.npm"
 
+  # Gate runner: only lattice-log's `talos-turn` job (`runs-on: [self-hosted, gate]`),
+  # which polls the API while holding its runner. Nothing else may use `gate`, so no
+  # job ever waits behind the gate. It runs actions/github-script only: no docker.sock
+  # and no pip/npm caches.
+  runner-gate:
+    <<: *runner-base
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: "talos-gate"
+      LABELS: "gate"
+    volumes:
+      - "runner-gate-data:/tmp/runner"
+
 volumes:
+  runner-gate-data:
   runner-light-data:
   runner-light-toolcache:
   runner-light-pip-cache:

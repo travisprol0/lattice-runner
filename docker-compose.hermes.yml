@@ -24,7 +24,7 @@ services:
     environment:
       <<: *runner-env
       RUNNER_NAME: "hermes-1"
-      LABELS: "hermes,hermes-1"
+      LABELS: "hermes,hermes-1,light"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "hermes-1-data:/tmp/runner"
