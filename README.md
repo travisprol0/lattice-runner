@@ -37,10 +37,12 @@ Pulls the image; if the digest changed: `compose stop` â†’ wait (default 90s) â†
 
 `hermes` (old MacBook Air) runs `hermes-1` (labels `hermes,hermes-1`) from `docker-compose.hermes.yml`, driven from talos over a Docker context (`ssh://twelvetwo@hermes`). Swarm was rejected: it ignores `network_mode: host` and per-node named volumes don't fit persisted runner registration.
 
+Network: talos `192.168.50.31` (ethernet, static via netplan), hermes `192.168.50.65` (wifi, static via netplan + Asus DHCP reservation). hermes's Broadcom BCM4360 wifi (`14e4:43a0`) needs `bcmwl-kernel-source` and `wpasupplicant` (neither is in Ubuntu Server by default; install over USB tethering or USB ethernet).
+
 One-time prep (from talos; prompts for ssh + sudo passwords):
 
 ```bash
-HERMES_HOST=<hermes-ip> bash scripts/hermes-prep.sh
+bash scripts/hermes-prep.sh   # defaults to 192.168.50.65; override with HERMES_HOST=
 ```
 
 Then, as always:
