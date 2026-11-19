@@ -2,7 +2,7 @@
 
 Self-hosted GitHub Actions runners for [travisprol0/lattice-log](https://github.com/travisprol0/lattice-log), via Compose + [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner).
 
-Four heavy runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`); lattice-log runs pytest and Cypress only on those, so at most four heavy jobs run at once on the 4-core / 8-thread host. A fifth runner, `talos-light`, has **no** `talos` label: it only takes light jobs (`runs-on: self-hosted` — lint, asset/docs builds, `ci-success`), so those never queue behind heavy jobs from another branch. CI uses **host** Postgres at `127.0.0.1:5432` on talos (not a job-local `-p 5432:5432` container). Production app stays on Render (https://latticelog.com) with its own DB. stagehand on talos monitors these runners with `GITHUB_REPO=travisprol0/lattice-log`.
+Four heavy runners (`talos-1` … `talos-4`) share the `talos` label (`runs-on: [self-hosted, talos]` or `talos-N`); lattice-log runs pytest and Cypress only on those, so at most four heavy jobs run at once on the 4-core / 8-thread host. lattice-log's `build-assets` also runs only on those, because test-backend waits on it and the Node build needs the 8 threads. A fifth runner, `talos-light`, has **no** `talos` label; lattice-log's `talos-turn` gate holds it while it waits for older runs. Light jobs (`runs-on: self-hosted`: quality-gate, docs build, `ci-success`) match every runner, including `talos-1` … `talos-4` and `hermes-1`. GitHub picks any idle one, so a light job can take a heavy slot and delay a heavy job, but it never hangs. CI uses **host** Postgres at `127.0.0.1:5432` on talos (not a job-local `-p 5432:5432` container). Production app stays on Render (https://latticelog.com) with its own DB. stagehand on talos monitors these runners with `GITHUB_REPO=travisprol0/lattice-log`.
 
 ## Setup
 
@@ -53,7 +53,7 @@ bash up.sh --host hermes    # one host
 bash up.sh --upgrade        # per-host pull/stop/wait/start
 ```
 
-Jobs must target `runs-on: [self-hosted, hermes]` to land on hermes. lattice-log CI uses host Postgres on talos, so those jobs stay on `talos`.
+Every self-hosted runner has the `self-hosted` label, so lattice-log's light jobs (`runs-on: self-hosted`) already land on hermes when it is idle. `runs-on: [self-hosted, hermes]` pins a job to hermes only; lattice-log does not do this, because that job would queue for as long as hermes is offline. Heavy jobs and `build-assets` need host Postgres or the talos CPU, so they use `[self-hosted, talos]` and never land on hermes.
 
 ## Stop
 
@@ -86,7 +86,7 @@ bash up.sh
 Uses `GITHUB_RUNNER_TOKEN` as a **PAT** (not a one-hour registration token) via
 stdlib Python (`gh` optional). Safe rules: delete offline dupes when an online
 peer exists; if all offline for a name, keep the newest id. Does not touch
-runners other than `talos-1`…`talos-4` and `talos-light`.
+runners other than `talos-1`…`talos-4`, `talos-light` and `hermes-1`…`hermes-4`.
 
 ## Runners
 
@@ -97,6 +97,7 @@ runners other than `talos-1`…`talos-4` and `talos-light`.
 | runner-3 | talos-3     | talos, talos-3   | runner-3-data  |
 | runner-4 | talos-4     | talos, talos-4   | runner-4-data  |
 | runner-light | talos-light | talos-light  | runner-light-data |
+| hermes-1 (hermes compose) | hermes-1 | hermes, hermes-1 | hermes-1-data |
 
 Each has a **unique stable** `RUNNER_NAME` and its own data volume (required: runners on one host must not share `RUNNER_WORKDIR` — [myoung34 README](https://github.com/myoung34/docker-github-actions-runner/blob/master/README.md)).
 
