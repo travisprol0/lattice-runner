@@ -32,7 +32,7 @@ import urllib.request
 
 REPO = os.environ.get("GITHUB_RUNNER_REPO", "travisprol0/lattice-log")
 API = os.environ.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
-NAME_RE = re.compile(r"^talos-([1-4]|light)$")
+NAME_RE = re.compile(r"^(talos-([1-4]|light)|hermes-[1-4])$")
 
 
 def _request(method: str, url: str, token: str) -> dict | list | None:

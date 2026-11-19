@@ -33,6 +33,26 @@ bash up.sh --upgrade
 
 Pulls the image; if the digest changed: `compose stop` → wait (default 90s) → `compose up -d`. Instant recreate with the same `RUNNER_NAME` causes **“A session for this runner already exists”** ([actions/runner#3624](https://github.com/actions/runner/issues/3624)).
 
+## Second host: hermes (Docker context, not Swarm)
+
+`hermes` (old MacBook Air) runs `hermes-1` (labels `hermes,hermes-1`) from `docker-compose.hermes.yml`, driven from talos over a Docker context (`ssh://twelvetwo@hermes`). Swarm was rejected: it ignores `network_mode: host` and per-node named volumes don't fit persisted runner registration.
+
+One-time prep (from talos; prompts for ssh + sudo passwords):
+
+```bash
+HERMES_HOST=<hermes-ip> bash scripts/hermes-prep.sh
+```
+
+Then, as always:
+
+```bash
+bash up.sh                  # talos + hermes
+bash up.sh --host hermes    # one host
+bash up.sh --upgrade        # per-host pull/stop/wait/start
+```
+
+Jobs must target `runs-on: [self-hosted, hermes]` to land on hermes. lattice-log CI uses host Postgres on talos, so those jobs stay on `talos`.
+
 ## Stop
 
 ```bash

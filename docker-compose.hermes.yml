@@ -1,0 +1,39 @@
+# Runners for hermes (old MacBook Air, ~4GB RAM). Deployed from talos via the
+# `hermes` Docker context: `bash up.sh` (all hosts) or `bash up.sh --host hermes`.
+# Same hardening/rationale as docker-compose.yml — see comments there.
+# Add hermes-2 only after confirming RAM headroom (`free -h`); 1 runner is the safe default.
+x-runner-base: &runner-base
+  image: "myoung34/github-runner:${GITHUB_RUNNER_IMAGE_TAG:-ubuntu-noble}"
+  pull_policy: missing
+  network_mode: host
+  restart: unless-stopped
+  stop_grace_period: 30s
+
+x-runner-env: &runner-env
+  DISABLE_AUTO_UPDATE: "true"
+  DISABLE_AUTOMATIC_DEREGISTRATION: "true"
+  REPO_URL: "https://github.com/travisprol0/lattice-log"
+  ACCESS_TOKEN: "${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN}"
+  RUNNER_WORKDIR: "/tmp/runner/work"
+  CONFIGURED_ACTIONS_RUNNER_FILES_DIR: "/tmp/runner"
+
+services:
+
+  hermes-1:
+    <<: *runner-base
+    environment:
+      <<: *runner-env
+      RUNNER_NAME: "hermes-1"
+      LABELS: "hermes,hermes-1"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "hermes-1-data:/tmp/runner"
+      - "hermes-1-toolcache:/opt/hostedtoolcache"
+      - "hermes-1-pip-cache:/root/.cache/pip"
+      - "hermes-1-npm-cache:/root/.npm"
+
+volumes:
+  hermes-1-data:
+  hermes-1-toolcache:
+  hermes-1-pip-cache:
+  hermes-1-npm-cache:
